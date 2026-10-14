@@ -1,0 +1,114 @@
+================================================================================
+HƯỚNG DẪN DỮ LIỆU & CÁCH CHẠY TRÊN KAGGLE / COLAB / LOCAL
+Mini Project 01 — E-ELAN (Phân loại + Phát hiện đối tượng)
+Cập nhật: 2026-10-14
+================================================================================
+
+Hai notebook đã được sửa để TỰ NHẬN BIẾT MÔI TRƯỜNG (Colab / Kaggle / Local).
+Bạn KHÔNG cần sửa đường dẫn tay nữa. Cơ chế:
+
+  - Colab : mount Google Drive, dùng   /content/drive/MyDrive/MiniProject01
+  - Kaggle: đọc data ở  /kaggle/input   ,  ghi kết quả ở  /kaggle/working/MiniProject01
+  - Local : dùng  D:/CV nâng cao/Project/Mini Project 01
+
+  * DATA_ROOT = nơi CHỨA dữ liệu (trên Kaggle là chỉ-đọc)
+  * OUT_ROOT  = nơi GHI weights/results (luôn ghi được)
+  * weights/ và results/ luôn nằm trong OUT_ROOT.
+
+--------------------------------------------------------------------------------
+1. DỮ LIỆU PHÂN LOẠI (Notebook 01) — dog / cat / panda (~3000 ảnh)
+--------------------------------------------------------------------------------
+KHÔNG cần tự đi kiếm ảnh. Dùng bộ công khai sẵn có trên Kaggle:
+    Tên : "Animal Image Dataset: DOG, CAT and PANDA"
+    Slug: ashishsaxena2209/animal-image-datasetdog-cat-and-panda
+    (gồm 3 thư mục lớp: cats / dogs / panda, mỗi lớp ~1000 ảnh; chưa chia val
+     -> notebook tự tách 10% làm val.)
+
+ CÁCH 1 — Chạy trên KAGGLE (khuyến nghị cho bạn cùng nhóm):
+   1) Tạo Notebook mới -> Upload file  notebooks/01_classification_eelan.ipynb
+   2) Panel bên phải -> "Add Input" -> gõ "Animal Image Dataset DOG CAT PANDA"
+      -> chọn bộ của ashishsaxena2209 -> Add.
+   3) Settings -> Accelerator: GPU T4  (và Internet: On nếu muốn auto-tải VOC ở NB02).
+   4) Run All. Notebook tự dò thư mục lớp trong /kaggle/input và chạy.
+   -> Nếu không add dataset mà bật Internet, cell môi trường sẽ tự tải bằng kagglehub.
+
+ CÁCH 2 — Chạy trên COLAB:
+   1) Upload cả thư mục project lên Drive thành  MyDrive/MiniProject01  (tùy chọn).
+   2) Mở notebook 01 trên Colab -> Runtime -> GPU.
+   3) Run All. Nếu Drive chưa có ảnh, cell môi trường sẽ tự tải bằng kagglehub
+      (cần đăng nhập Kaggle nếu bị hỏi token — xem mục 4).
+
+ Muốn DÙNG CHUNG đúng 1 bản train/val cho cả nhóm? Xem mục 5 (đóng gói & upload).
+
+--------------------------------------------------------------------------------
+2. DỮ LIỆU PHÁT HIỆN ĐỐI TƯỢNG (Notebook 02) — cat / dog / panda (chuẩn YOLO)
+--------------------------------------------------------------------------------
+ - cat & dog: TỰ ĐỘNG tải từ Pascal VOC 2007 (torchvision, cần Internet: On).
+              Không cần làm gì, chỉ cần bật Internet trên Kaggle.
+ - panda    : cần 1 dataset panda có bounding box (định dạng YOLO: images/ + labels/*.txt).
+              Notebook sẽ TỰ DÒ thư mục có chữ "panda" + có nhãn .txt rồi nạp.
+
+   Lấy panda ở đâu (chọn 1):
+     a) Roboflow Universe (export YOLOv8). Vài project có sẵn:
+          - https://universe.roboflow.com/program1/panda_detection        (~288 ảnh)
+          - https://universe.roboflow.com/xdgyifeng/panda-detection-yoo4d
+          - https://universe.roboflow.com/attha/panda-skne0               (~40 ảnh)
+        Mở project -> Download Dataset -> Format: YOLOv8 -> tải zip về.
+     b) Trên Kaggle: giải nén zip panda, tạo một Kaggle Dataset từ nó (hoặc tìm
+        dataset panda-bbox có sẵn), rồi "Add Input" vào notebook 02.
+        -> Đặt tên thư mục/dataset có chữ "panda" để cell tự dò, HOẶC mở cell "2b"
+           và set thủ công:  PANDA_SRC = "/kaggle/input/<ten-dataset-panda>"
+     c) Colab/Local: giải nén panda vào 1 thư mục có images/ + labels/, rồi set
+           PANDA_SRC = r"đường/dẫn/panda_yolo"
+
+   (Nếu tạm thời chưa có panda: NB02 vẫn chạy với cat/dog, nhưng để ĐỦ 3 lớp
+    theo yêu cầu đề thì nên bổ sung panda.)
+
+--------------------------------------------------------------------------------
+3. LUỒNG CHẠY ĐÚNG THỨ TỰ (QUAN TRỌNG)
+--------------------------------------------------------------------------------
+ Notebook 02 cần file  weights/backbone.pt  do Notebook 01 sinh ra.
+ Vì vậy trên CÙNG MỘT môi trường, chạy theo thứ tự:
+
+   Kaggle: trong CÙNG 1 notebook-session, chạy NB01 trước (sinh backbone.pt vào
+           /kaggle/working/MiniProject01/weights), rồi chạy NB02 — nó tự tìm thấy.
+           (Nếu tách 2 notebook riêng: sau khi NB01 chạy xong, "Save Version" để
+            giữ output, rồi ở NB02 "Add Input" lấy output đó; NB02 cũng tự dò
+            backbone.pt trong /kaggle/input.)
+
+   Colab : chạy NB01 trước (backbone.pt lưu vào Drive), rồi NB02 đọc lại từ Drive.
+
+--------------------------------------------------------------------------------
+4. LƯU Ý KAGGLE / COLAB
+--------------------------------------------------------------------------------
+ - Kaggle: bật Settings -> Internet: On để tải VOC 2007 và (nếu dùng) kagglehub.
+ - /kaggle/working sẽ bị xóa khi tắt session -> tải file kết quả về trước khi thoát
+   (weights/*.pt, results/*). Hoặc "Save Version" để Kaggle giữ lại Output.
+ - Colab: nếu kagglehub hỏi xác thực, vào https://www.kaggle.com -> Account ->
+   Create New API Token (kaggle.json), rồi upload khi được hỏi.
+
+--------------------------------------------------------------------------------
+5. (TÙY CHỌN) ĐÓNG GÓI DATA ĐỂ UPLOAD LÊN DRIVE / KAGGLE DATASET
+--------------------------------------------------------------------------------
+ Nếu muốn cả nhóm dùng CHUNG đúng 1 bản dữ liệu (thay vì mỗi người auto-tải):
+
+ Cấu trúc nên có:
+     MiniProject01/
+       data/classification/train/{cats,dogs,panda}/*.jpg
+       data/classification/val/{cats,dogs,panda}/*.jpg      (tùy chọn)
+       data/detection/images/{train,val}/*.jpg
+       data/detection/labels/{train,val}/*.txt
+       data/detection/classes.txt
+
+ - Lên DRIVE (cho Colab): upload cả thư mục  MiniProject01  vào  My Drive,
+   sao cho đường dẫn là  /content/drive/MyDrive/MiniProject01/data/...
+   Chia sẻ thư mục cho email bạn cùng nhóm (quyền xem/sửa).
+
+ - Lên KAGGLE (cho Kaggle): nén thư mục  data/  thành  data.zip  ->
+   kaggle.com -> Datasets -> New Dataset -> upload zip -> đặt tên, ví dụ
+   "miniproject01-data" -> Create. Sau đó "Add Input" dataset này vào notebook;
+   code tự dò cấu trúc train/ hoặc images/labels.
+
+ LƯU Ý: Mình (Claude) KHÔNG tự đăng nhập/đẩy file lên Google Drive hay Kaggle hộ
+ bạn được — bước upload này bạn phải tự thực hiện bằng tài khoản của mình.
+================================================================================

@@ -3,26 +3,27 @@
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Google Colab](https://img.shields.io/badge/Run%20in-Google%20Colab-f9ab00.svg)](https://colab.research.google.com/)
+[![Google Colab](<https://img.shields.io/badge/Run%20in-Google%20Colab-f9ab00.svg>)](https://colab.research.google.com/)
 
-> **Học phần:** Một số vấn đề chọn lọc về Thị giác máy tính (MAT3563)  
-> **Khoa:** Toán - Cơ - Tin học, Trường Đại học Khoa học Tự nhiên – ĐHQGHN  
-> **Giảng viên hướng dẫn:** TS. Cao Văn Chung  
+> **Học phần:** Một số vấn đề chọn lọc về Thị giác máy tính (MAT3563)
+> **Khoa:** Toán - Cơ - Tin học, Trường Đại học Khoa học Tự nhiên – ĐHQGHN
+> **Giảng viên hướng dẫn:** TS. Cao Văn Chung
 
 ---
 
 ## 👥 Nhóm sinh viên thực hiện
 
-| STT | Họ và tên | Mã sinh viên | Lớp | Nhiệm vụ chính |
-| :---: | :--- | :---: | :---: | :--- |
-| 1 | **Nguyễn Đức Quang** | **23001918** | K68A4 Toán Tin | **Task 1 & 2:** Xây dựng Backbone E-ELAN, cơ chế lưu/nạp weights, inference ảnh đơn & thư mục, xuất CSV, tính Precision/Recall, vẽ Confusion Matrix, vẽ đồ thị biến thiên Loss & Accuracy. |
-| 2 | **Hà Minh Quang** | **23001916** | K68A4 Toán Tin | **Task 3:** Thu thập & chuẩn hóa dữ liệu Pascal VOC + Roboflow về chuẩn YOLO; thiết kế ghép nối E-ELAN Backbone (frozen) + SimpleFPN + SSD Head; Anchor matching đa tỉ lệ, Multibox Loss (Hard Negative Mining 3:1), giải thuật NMS, đánh giá mAP@0.5. |
+| STT | Họ và tên                  |   Mã sinh viên   |                   Lớp                   | Nhiệm vụ chính                                                                                                                                                                                                                                                               |
+| :-: | :---------------------------- | :----------------: | :---------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|  1  | **Nguyễn Đức Quang** | **23001918** | K68A4 Khoa học máy tính và thông tin | **Task 1 & 2:** Xây dựng Backbone E-ELAN, cơ chế lưu/nạp weights, inference ảnh đơn & thư mục, xuất CSV, tính Precision/Recall, vẽ Confusion Matrix, vẽ đồ thị biến thiên Loss & Accuracy.                                                            |
+|  2  | **Hà Minh Quang**      | **23001916** | K68A4 Khoa học máy tính và thông tin | **Task 3:** Thu thập & chuẩn hóa dữ liệu Pascal VOC + Roboflow về chuẩn YOLO; thiết kế ghép nối E-ELAN Backbone (frozen) + SimpleFPN + SSD Head; Anchor matching đa tỉ lệ, Multibox Loss (Hard Negative Mining 3:1), giải thuật NMS, đánh giá mAP@0.5. |
 
 ---
 
 ## 📌 Tổng quan dự án
 
 Dự án nghiên cứu và phân tích khối kiến trúc **E-ELAN** (*Extended Efficient Layer Aggregation Network*) trong **YOLOv7**, từ đó ứng dụng để giải quyết hai bài toán thị giác máy tính:
+
 1. **Phân loại ảnh (Image Classification):** Xây dựng mạng phân loại 3 lớp (`cats`, `dogs`, `panda`), bổ sung cơ chế lưu/nạp trọng số, chạy suy luận đơn và hàng loạt (xuất kết quả xác suất ra CSV), đánh giá định lượng Precision, Recall, F1-score và ma trận nhầm lẫn.
 2. **Phát hiện đối tượng (Object Detection):** Tái sử dụng chính Backbone E-ELAN đã huấn luyện (ở chế độ đóng băng trọng số), ghép nối với phần **Neck** (*SimpleFPN*) và phần **Head** (*SSD Head*) một giai đoạn để phát hiện 3 lớp đối tượng trên tập dữ liệu tự thu thập và chuẩn hóa.
 
@@ -101,11 +102,13 @@ Mini Project 01/
 ## ⚙️ Cài đặt & Yêu cầu môi trường
 
 ### 1. Yêu cầu hệ thống
+
 - **Hệ điều hành:** Linux, macOS, hoặc Windows
 - **Python:** $\ge 3.9$
 - **Khuyến nghị phần cứng:** GPU NVIDIA (hỗ trợ CUDA) với VRAM $\ge 8\text{ GB}$ (khuyên dùng **Google Colab GPU T4**).
 
 ### 2. Cài đặt thư viện
+
 ```bash
 pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cu118
 pip install numpy matplotlib pillow opencv-python scikit-learn tqdm
@@ -116,10 +119,12 @@ pip install numpy matplotlib pillow opencv-python scikit-learn tqdm
 ## 🚀 Hướng dẫn thực thi
 
 Mã nguồn trong cả hai notebook đều tích hợp sẵn cơ chế **tự động nhận diện môi trường**:
+
 - Khi chạy trên **Google Colab**: Tự động mount Google Drive và trỏ vào thư mục `/content/drive/MyDrive/MiniProject01`.
 - Khi chạy **Local**: Tự động trỏ vào đường dẫn cục bộ dự án.
 
 ### Bước 1: Huấn luyện phân loại ảnh & Trích xuất Backbone (Notebook 01)
+
 1. Mở `notebooks/01_classification_eelan.ipynb`.
 2. Kiểm tra dữ liệu tại `data/classification/` (bộ ảnh Kaggle Dog, Cat, Panda).
 3. Chạy toàn bộ notebook (**Run All**):
@@ -130,6 +135,7 @@ Mã nguồn trong cả hai notebook đều tích hợp sẵn cơ chế **tự đ
    - Đặt đường dẫn ảnh hoặc thư mục vào biến `INFER_PATH` ở cell cuối cùng để chạy suy luận và xuất kết quả ra `results/cls_predictions.csv`.
 
 ### Bước 2: Huấn luyện mô hình Phát hiện đối tượng (Notebook 02)
+
 1. Mở `notebooks/02_detection_eelan.ipynb`.
 2. Yêu cầu tiên quyết: Đã có tệp `weights/backbone.pt` từ Bước 1.
 3. Tại Mục 2 (Xây dựng dữ liệu):
@@ -146,6 +152,7 @@ Mã nguồn trong cả hai notebook đều tích hợp sẵn cơ chế **tự đ
 ## 📊 Tóm tắt kết quả thực nghiệm
 
 ### 1. Kết quả Phân loại ảnh (Task 1 & Task 2)
+
 - **Độ chính xác kiểm định cao nhất:** **80.33%**
 - **Diễn biến huấn luyện:** Loss giảm đều từ $0.8756$ xuống $0.4183$.
 - **Chi tiết từng lớp:**
@@ -155,6 +162,7 @@ Mã nguồn trong cả hai notebook đều tích hợp sẵn cơ chế **tự đ
   - **Macro Average F1:** **0.807**.
 
 ### 2. Kết quả Phát hiện đối tượng (Task 3)
+
 - **Độ đo toàn diện:** **$\text{mAP}@0.5 = 0.642$**
 - **Average Precision theo từng lớp:**
   - `panda`: $\text{AP}@0.5 = \mathbf{0.745}$
@@ -167,6 +175,7 @@ Mã nguồn trong cả hai notebook đều tích hợp sẵn cơ chế **tự đ
 ## 📖 Báo cáo học thuật LaTeX
 
 Báo cáo đầy đủ được biên soạn bằng LaTeX tại thư mục [`report/main.tex`](report/main.tex), tuân thủ nghiêm ngặt quy định không đưa mã nguồn vào bài làm:
+
 - **Trang bìa trang trọng:** Khung viền đôi chuẩn mẫu HUS - ĐHQGHN.
 - **5 Chương chuyên sâu:**
   1. *Chương 1:* Đặt vấn đề và Mục tiêu nghiên cứu.
