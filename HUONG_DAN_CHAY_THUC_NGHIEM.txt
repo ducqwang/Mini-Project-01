@@ -1,0 +1,185 @@
+================================================================================
+HỌC PHẦN: MỘT SỐ VẤN ĐỀ CHỌN LỌC VỀ THỊ GIÁC MÁY TÍNH (MAT3563)
+HƯỚNG DẪN CHẠY & CHẤM THỰC NGHIỆM — MINI PROJECT 01
+Đề tài: Phân tích khối E-ELAN và ứng dụng trong Phân loại ảnh & Phát hiện đối tượng
+Giảng viên hướng dẫn: TS. Cao Văn Chung
+Cập nhật: 2026-10-18
+================================================================================
+
+MỤC ĐÍCH CỦA TỆP NÀY
+  Tệp cung cấp ĐẦY ĐỦ thông tin về tệp nguồn, dữ liệu và cách cấu hình để người
+  chấm có thể (1) hiểu từng tệp làm gì, (2) biết lấy dữ liệu ở đâu, (3) tái chạy
+  lại toàn bộ thực nghiệm và thu được kết quả tương đương báo cáo.
+
+  LƯU Ý QUAN TRỌNG: Hai notebook kèm theo ĐÃ CHỨA SẴN OUTPUT (đồ thị, bảng số,
+  ảnh dự đoán) của lần chạy thực tế trên Kaggle. Người chấm có thể xem trực tiếp
+  kết quả mà KHÔNG cần chạy lại. Các ảnh kết quả đã được trích sẵn ra thư mục
+  results/ (xem Mục 6). Phần hướng dẫn chạy lại (Mục 4) chỉ cần khi muốn
+  tái lập độc lập.
+
+--------------------------------------------------------------------------------
+THÔNG TIN NHÓM
+--------------------------------------------------------------------------------
+  1. Nguyễn Đức Quang - MSSV: 23001918 - K68A4  (Task 1 & 2 - Phân loại)
+  2. Hà Minh Quang    - MSSV: 23001916 - K68A4  (Task 3 - Phát hiện đối tượng)
+
+  Phối hợp chung: cùng rà soát mã nguồn, chạy thực nghiệm trên GPU (Kaggle),
+  phân tích lý thuyết khối E-ELAN và biên soạn báo cáo.
+
+================================================================================
+1. DANH SÁCH TỆP NGUỒN VÀ CHỨC NĂNG
+================================================================================
+Mini Project 01/
+  notebooks/
+    01_classification_eelan.ipynb   Task 1 + 2. Định nghĩa Backbone E-ELAN (ConvBNAct,
+                                     E-ELAN block, EELANBackbone), Classifier; nạp dữ
+                                     liệu bằng ImageFolder; huấn luyện 20 epoch; lưu
+                                     best_cls.pt + tách backbone.pt; vẽ đồ thị Loss/Acc;
+                                     tính Precision/Recall/F1 + Confusion Matrix;
+                                     inference ảnh đơn/thư mục -> xuất CSV.
+    02_detection_eelan.ipynb        Task 3. Dựng dataset phát hiện (VOC 2007 cat/dog +
+                                     Panda) về chuẩn YOLO; Dataset/DataLoader 320x320;
+                                     định nghĩa lại Backbone E-ELAN để nạp backbone.pt;
+                                     Neck SimpleFPN + Head SSD; sinh anchors; encode/decode
+                                     + anchor matching + Multibox Loss (Hard Negative
+                                     Mining 3:1); huấn luyện 30 epoch; NMS + vẽ bbox +
+                                     xuất CSV; đánh giá mAP@0.5 kiểu VOC.
+
+  data/            Thư mục dữ liệu (xem Mục 3). Khi chạy trên Kaggle, dữ liệu phân
+                   loại nằm ở /kaggle/input; dữ liệu detection được DỰNG tự động
+                   vào /kaggle/working/MiniProject01/data/detection.
+  weights/         best_cls.pt (mạng phân loại), backbone.pt (riêng Backbone, dùng cho
+                   Task 3), best_det.pt (mô hình phát hiện tốt nhất).
+  results/         Kết quả & ảnh trực quan đã trích từ output notebook (xem Mục 6).
+  report/main.tex  Báo cáo LaTeX 5 chương (biên dịch trên Overleaf; đọc ảnh từ ../results/).
+  CNN_ELAN_Class.ipynb   Mã minh họa khối E-ELAN gốc của giảng viên (tham khảo).
+  Advanced_CV.pdf        Tài liệu lý thuyết E-ELAN / YOLOv7.
+  HUONG_DAN_DATA_KAGGLE_COLAB.txt   Hướng dẫn thêm dataset trên Kaggle/Colab/Local.
+  HUONG_DAN_CHAY_THUC_NGHIEM.txt    Tệp này.
+  README.md        Tổng quan dự án (tiếng Việt + sơ đồ kiến trúc).
+
+================================================================================
+2. MÔI TRƯỜNG ĐÃ DÙNG & YÊU CẦU
+================================================================================
+- Nền tảng thực nghiệm chính thức (tạo ra kết quả trong báo cáo): KAGGLE NOTEBOOKS
+    + GPU: NVIDIA Tesla T4 (16 GB VRAM), Accelerator = GPU T4.
+    + Thời gian: ~16 giây/epoch (phân loại), ~23 giây/epoch (phát hiện).
+- Python 3.11, PyTorch 2.x + CUDA. Phân loại bật AMP (mixed precision).
+- Thư viện: torch, torchvision, numpy, pandas, scikit-learn, matplotlib, pillow,
+  opencv-python, tqdm, kagglehub (tùy chọn auto-tải dataset).
+- Cơ chế tự nhận diện môi trường (biến ENV ở cell đầu mỗi notebook):
+    ENV='kaggle' : đọc /kaggle/input, ghi /kaggle/working/MiniProject01   (ĐÃ DÙNG)
+    ENV='colab'  : mount Drive -> /content/drive/MyDrive/MiniProject01
+    ENV='local'  : D:/CV nâng cao/Project/Mini Project 01
+  Mặc định hai notebook đang đặt ENV='kaggle'. Đổi giá trị này nếu chạy nơi khác.
+
+================================================================================
+3. NGUỒN DỮ LIỆU (CHÍNH XÁC) & QUY TRÌNH CHUẨN HÓA
+================================================================================
+3.1. PHÂN LOẠI (Notebook 01)
+  - Dataset: "Animal Image Dataset: DOG, CAT and PANDA" (Kaggle)
+        slug: ashishsaxena2209/animal-image-datasetdog-cat-and-panda
+        cấu trúc: animals/animals/{cats, dogs, panda}, mỗi lớp ~1.000 ảnh (tổng 3.000).
+  - Chưa có sẵn tập val -> notebook TỰ TÁCH ngẫu nhiên 10% làm val (seed=42).
+        Thực tế: train 2.700 ảnh, val 300 ảnh (cats 90, dogs 109, panda 101).
+  - Tăng cường: RandomResizedCrop(224), RandomHorizontalFlip(0.5), ColorJitter,
+        chuẩn hóa theo mean/std ImageNet.
+
+3.2. PHÁT HIỆN ĐỐI TƯỢNG (Notebook 02)
+  - cat & dog: tải tự động từ PASCAL VOC 2007 (torchvision VOCDetection, download=True,
+        image_set="trainval"), lọc ảnh có nhãn 'cat'/'dog'. Ghi được 764 ảnh.
+  - panda    : tập "Panda Detection" trên Kaggle (định dạng YOLO sẵn: images/ + labels/*.txt).
+        Lần chạy báo cáo dùng dataset đính kèm: minhquanghus/panda-detection (285 ảnh).
+        Notebook TỰ DÒ thư mục chứa "panda" + nhãn .txt; hoặc set thủ công PANDA_SRC.
+  - Chuẩn hóa thống nhất về YOLO format: mỗi ảnh 1 tệp .txt, mỗi dòng
+        <class_id> <cx> <cy> <w> <h>  (class_id: 0=cat, 1=dog, 2=panda; tọa độ [0,1]).
+  - Tách train/val theo tỉ lệ val ~15%.
+        Thực tế: 1.049 ảnh / 1.245 bbox -> train 877 ảnh (box cat325/dog448/panda270),
+        val 172 ảnh (box cat64/dog90/panda48).
+  - Anchor cơ sở [48,112,224] px được chọn qua bước khảo sát trên ground-truth
+        (IoU khớp trung bình 0.79; recall@IoU>=0.5 = 98.81%).
+
+  (Chi tiết "Add Input" / cách lấy panda trên từng nền tảng: xem
+   HUONG_DAN_DATA_KAGGLE_COLAB.txt.)
+
+================================================================================
+4. CÁC BƯỚC CHẠY LẠI (THỨ TỰ BẮT BUỘC)
+================================================================================
+Notebook 02 cần weights/backbone.pt do Notebook 01 sinh ra -> CHẠY NB01 TRƯỚC.
+
+BƯỚC 1 — Notebook 01 (Phân loại, Task 1 + 2)
+  1. Tạo Kaggle Notebook, upload 01_classification_eelan.ipynb.
+  2. Add Input -> "Animal Image Dataset DOG CAT PANDA" (ashishsaxena2209).
+  3. Settings -> Accelerator: GPU T4; Internet: On.
+  4. Kiểm tra cell đầu đang để ENV='kaggle'. Run All.
+  5. Kết quả sinh ra trong /kaggle/working/MiniProject01:
+       weights/best_cls.pt, weights/backbone.pt
+       results/cls_training_curves.png, cls_confusion_matrix.png,
+               cls_precision_recall.txt, cls_history.csv
+  6. Inference: sửa biến INFER_PATH ở cell cuối trỏ tới 1 ảnh hoặc 1 thư mục;
+     notebook nạp best_cls.pt, dự đoán và lưu results/cls_predictions.csv.
+
+BƯỚC 2 — Notebook 02 (Phát hiện, Task 3)
+  1. Bảo đảm đã có backbone.pt từ Bước 1 (cùng session, hoặc Add Input output NB01).
+  2. Add Input dataset panda (định dạng YOLO). Internet: On để tải VOC 2007.
+  3. Kiểm tra ENV='kaggle', BUILD_VOC=True. Run All.
+  4. Mô hình nạp backbone.pt (freeze_backbone=False -> tinh chỉnh toàn bộ, 3.41M tham số),
+     huấn luyện 30 epoch; lưu checkpoint tốt nhất theo val loss.
+  5. Kết quả sinh ra:
+       weights/best_det.pt
+       results/det_loss_curve.png, det_metrics.txt, det_predictions.csv
+       results/det_vis/*  (ảnh vẽ bounding box)
+
+LƯU Ý Kaggle: /kaggle/working bị xóa khi tắt session -> tải file kết quả về hoặc
+"Save Version" để giữ Output.
+
+================================================================================
+5. BẢNG SIÊU THAM SỐ (ĐÚNG THEO CODE ĐÃ CHẠY)
+================================================================================
+PHÂN LOẠI (01_classification_eelan.ipynb, dict CFG):
+  img_size=224 | epochs=20 | batch_size=32 | lr=2e-3 | weight_decay=0.05
+  optimizer=AdamW | scheduler=Cosine (min_lr_scale=0.05) | AMP=True | seed=42
+  Backbone: C_stem=32, widths=(64,128,192,256), m=2.0, g=2, 4 nhánh đa chiều sâu
+  auto_split_val_ratio=0.1 | num_classes=3 (cats,dogs,panda)
+
+PHÁT HIỆN (02_detection_eelan.ipynb, dict CFG):
+  img_size=320 | strides=[8,16,32] (P3,P4,P5)
+  anchor_bases=[48,112,224] | anchor_scales=[1.0,1.4] | anchor_ratios=[1.0,2.0,0.5]
+      -> 6 anchor/ô; tổng 12.600 anchor/ảnh
+  variances=(0.1,0.2) | pos_iou=0.5 | neg_iou=0.4 | neg_pos_ratio=3 (Hard Neg Mining)
+  epochs=30 | batch_size=16 | lr=2e-3 | weight_decay=5e-4 | optimizer=AdamW
+  scheduler=CosineAnnealingLR
+  freeze_backbone=False  (nạp backbone.pt làm khởi tạo, TINH CHỈNH toàn bộ end-to-end)
+  conf_th=0.3 | nms_iou=0.45 | val_ratio=0.15
+
+================================================================================
+6. KẾT QUẢ ĐÃ ĐẠT (TRÍCH TỪ OUTPUT NOTEBOOK)
+================================================================================
+PHÂN LOẠI (val 300 ảnh):
+  - Val accuracy tốt nhất: 85.67% (epoch 18). Train: loss 0.94->0.25, acc 53.96%->89.19%.
+  - Precision / Recall / F1 theo lớp:
+        cats : 0.769 / 0.778 / 0.774  (support 90)  -- lớp yếu nhất
+        dogs : 0.815 / 0.807 / 0.811  (support 109)
+        panda: 0.980 / 0.980 / 0.980  (support 101)
+        Macro F1 = 0.855 | Weighted F1 = 0.857
+  - Nhầm lẫn chủ yếu giữa cats <-> dogs; gần như không nhầm sang panda.
+
+PHÁT HIỆN (val 172 ảnh, IoU=0.5):
+  - mAP@0.5 = 0.512
+        cat  : AP 0.432 | P 0.325 | R 0.641
+        dog  : AP 0.275 | P 0.269 | R 0.589
+        panda: AP 0.829 | P 0.573 | R 0.896
+  - Train loss 13.83 -> 1.98; val loss chạm đáy 4.28 (epoch 18) rồi nhích lên
+    (quá khớp nhẹ) -> chọn checkpoint tốt nhất theo val loss.
+  - Tổng 398 detections được vẽ/xuất trên 20 ảnh minh họa.
+
+Ảnh kết quả trong thư mục results/:
+  cls_training_curves.png     Đồ thị Train/Val Loss & Accuracy (20 epoch).
+  cls_confusion_matrix.png    Ma trận nhầm lẫn 3 lớp.
+  cls_inference_samples.png   Lưới ảnh suy luận phân loại (nhãn + xác suất Softmax).
+  det_loss_curve.png          Đồ thị Multibox Loss train/val (30 epoch).
+  det_vis_grid.png            Lưới 6 ảnh phát hiện (bbox + nhãn + confidence).
+  det_vis_sample_01..05.png   5 ảnh phát hiện riêng lẻ ở độ phân giải đầy đủ.
+  (Khi chạy lại sẽ sinh thêm: cls_precision_recall.txt, cls_predictions.csv,
+   cls_history.csv, det_metrics.txt, det_predictions.csv, det_vis/.)
+================================================================================
