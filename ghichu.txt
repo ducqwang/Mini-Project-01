@@ -1,0 +1,66 @@
+============================================================
+                    TÀI LIỆU HƯỚNG DẪN
+============================================================
+
+0. FILE NOTEBOOK
+
+   - Notebook1 (01_classification_eelan.ipynb) : Chạy phần bài toán phân loại với backbone E-ELAN.(Nguyễn Đức Quang- 23001918
+   - Notebook2 (02_detection_eelan.ipynb) : Trình bày bài toán Object Detection với backbone E-ELAN.(Hà Minh Quang -23001916
+
+
+1. CÁCH CHẠY
+
+   Hai file notebook được cấu hình sẵn, chỉ cần tải lên Kaggle
+   và chạy.
+
+
+2. DATA
+
+   2.1. Bài toán phân loại
+
+        Data lấy từ Animal Dataset có sẵn trên Kaggle:
+
+        https://www.kaggle.com/datasets/ashishsaxena2209/animal-image-datasetdog-cat-and-panda/code
+
+   2.2. Bài toán Object Detection
+
+        - Data chó, mèo: lấy từ VOC2007.
+
+        - Data panda: lấy từ một trong các nguồn sau:
+
+          Roboflow:
+          https://universe.roboflow.com/search?q=class%3Apanda
+
+          Google Drive:
+          https://drive.google.com/drive/folders/1UivPGpGR1APk9Z0prKy1--2P0zzSAJK7?hl=vi
+
+
+3. NHIỆM VỤ và các file liên quan
+
+   3.1. Nguyễn Đức Quang (MSSV: 23001918)
+
+        Phụ trách chính các nội dung thuộc Task 1 và Task 2:
+
+        - Hiện thực mạng phân loại E-ELAN.
+        - Cơ chế lưu/nạp checkpoint.
+        - Module suy luận đơn/thư mục xuất CSV.
+        - Tính toán Precision/Recall/Confusion Matrix và đồ thị
+          huấn luyện.
+	- best_cls.pt: trọng số model
+	- cls_prediction.csv: kết quả phân loại vật thể 
+
+   3.2. Hà Minh Quang (MSSV: 23001916)
+
+        Phụ trách chính các nội dung thuộc Task 3:
+
+        - Thu thập và chuẩn hóa dữ liệu Pascal VOC + Roboflow
+          về chuẩn YOLO.
+        - Ghép nối E-ELAN Backbone với Neck SimpleFPN và Head SSD.
+        - Thiết kế Anchor Matching, Multibox Loss, NMS và đánh giá
+          mAP@0.5.
+	- det_prediction.csv: kết quả model detect vật thể (các chỉ số x1,x2,y1,y2 là tọa độ bboxes)
+	- bet_det.pt: trọng số mô hình
+	
+
+link github: https://github.com/ducqwang/Mini-Project-01
+============================================================
